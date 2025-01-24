@@ -28,6 +28,15 @@
   <style scoped>
   .location-selector {
     margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    animation: slideIn 1s ease-in-out;
+  }
+  @keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
   button {
     margin-top: 10px;
@@ -37,6 +46,8 @@
     color: #000;
     font-weight: bold;
     cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
   }
   button:hover {
     background-color: #ff9900;
