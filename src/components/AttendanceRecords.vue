@@ -4,15 +4,16 @@
       <form @submit.prevent="fetchRecords">
         <div class="form-group">
           <label for="start_date">Fecha de Inicio:</label>
-          <input type="date" id="start_date" v-model="startDate" @change="updateEndDate" @input="closeCalendar" required>
+          <input type="date" id="start_date" v-model="startDate" @change="updateEndDate" @input="delayedShowPopup" required>
         </div>
         <div class="form-group">
           <label for="end_date">Fecha de Fin:</label>
-          <input type="date" id="end_date" v-model="endDate" :min="minEndDate" :max="maxEndDate" @input="closeCalendar" required>
+          <input type="date" id="end_date" v-model="endDate" :min="minEndDate" :max="maxEndDate" required>
         </div>
         <div class="button-container">
           <button type="submit" :disabled="isLoading" :class="{ 'disabled-button': isLoading }">Obtener Registros</button>
           <span v-if="isLoading" class="countdown">{{ countdown }}s</span>
+          <div v-if="isLoading" class="spinner"></div>
         </div>
       </form>
       <div id="results" v-if="records.length">
@@ -27,84 +28,96 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="record in records" :key="record['Employee ID']">
+            <tr v-for="record in records" :key="record['Employee ID']" :class="{ 'anomaly': record['First Check-In Time'] === record['Last Check-Out Time'] }">
               <td>{{ record['Employee ID'] }}</td>
               <td>{{ record['Name'] }}</td>
-              <td>{{ record['Date'] }}</td>
-              <td>{{ record['First Check-In Time'] }}</td>
-              <td>{{ record['Last Check-Out Time'] }}</td>
+              <td>{{ formatDate(record['First Check-In Time']) }}</td>
+              <td>{{ formatDateTime(record['First Check-In Time']) }}</td>
+              <td>{{ formatDateTime(record['Last Check-Out Time']) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
       <p v-else>No hay registros disponibles.</p>
-      <p class="warning">*Los empleados que mantengan la misma hora de entrada y salida, significa que marcaron entrada, pero no salida o viceversa*</p>
+      <p class="warning">*Los empleados de amarillo son trabajadores que marcaron entrada, pero no salida. O viceversa*</p>
     </div>
   </template>
   
   <script>
-  import axios from 'axios';
+  import { fetchAttendanceRecords } from './attendanceService';
   
   export default {
     data() {
       return {
         startDate: '',
         endDate: '',
-        minEndDate: '',
-        maxEndDate: '',
         records: [],
         isLoading: false,
         countdown: 60
       };
     },
+    computed: {
+      minEndDate() {
+        if (!this.startDate) return '';
+        const startDate = new Date(this.startDate);
+        if (isNaN(startDate.getTime())) return '';
+        const minEndDate = new Date(startDate);
+        minEndDate.setDate(startDate.getDate() + 1);
+        return minEndDate.toISOString().split('T')[0];
+      },
+      maxEndDate() {
+        if (!this.startDate) return '';
+        const startDate = new Date(this.startDate);
+        if (isNaN(startDate.getTime())) return '';
+        const maxEndDate = new Date(startDate);
+        maxEndDate.setDate(startDate.getDate() + 2); // Limitar a 3 días en total
+        return maxEndDate.toISOString().split('T')[0];
+      }
+    },
     methods: {
+      showPopup() {
+        alert('Sólo puede escogerse 3 días máximo de rango por consulta.');
+      },
+      delayedShowPopup() {
+        setTimeout(this.showPopup, 300); // Retrasa la aparición del mensaje emergente
+      },
       updateEndDate() {
         const startDate = new Date(this.startDate);
+        if (isNaN(startDate.getTime())) return;
+  
         const minEndDate = new Date(startDate);
         const maxEndDate = new Date(startDate);
   
-        // Ajustar las fechas mínimas y máximas
         minEndDate.setDate(startDate.getDate() + 1);
-        maxEndDate.setDate(startDate.getDate() + 3);
+        maxEndDate.setDate(startDate.getDate() + 2); // Limitar a 3 días en total
   
-        // Formatear las fechas a YYYY-MM-DD
-        this.minEndDate = minEndDate.toISOString().split('T')[0];
-        this.maxEndDate = maxEndDate.toISOString().split('T')[0];
-  
-        // Resetear la fecha de fin si está fuera del nuevo rango
         if (new Date(this.endDate) < minEndDate || new Date(this.endDate) > maxEndDate) {
-          this.endDate = '';
+          if (confirm('La fecha de fin está fuera del rango permitido. Sólo puede escoger un rango máximo de 3 días. ¿Desea reiniciar la fecha de fin?')) {
+            this.endDate = '';
+          }
         }
-  
-        // Mostrar el pop-up
-        alert('Sólo puede escogerse 3 días máximo de rango por consulta.');
       },
       fetchRecords() {
         this.isLoading = true;
         this.countdown = 60;
         this.startCountdown();
-  
-        // Limpiar el estado de records antes de realizar una nueva solicitud
         this.records = [];
   
-        axios.get('http://10.243.176.227:5000/attendance', {
-          params: {
-            start_date: this.startDate,
-            end_date: this.endDate
-          }
-        })
-        .then(response => {
-          // Asignar los datos recibidos directamente a records
-          this.records = response.data;
-        })
-        .catch(error => {
-          console.error('Error al obtener los registros de asistencia:', error);
-        })
-        .finally(() => {
-          setTimeout(() => {
-            this.isLoading = false;
-          }, 60000); // 60 segundos
-        });
+        setTimeout(() => {
+          fetchAttendanceRecords(this.startDate, this.endDate)
+            .then(response => {
+              this.records = response.data;
+              this.resetForm();
+            })
+            .catch(error => {
+              console.error('Error al obtener los registros de asistencia:', error);
+            })
+            .finally(() => {
+              setTimeout(() => {
+                this.isLoading = false;
+              }, 60000);
+            });
+        }, 4000); // Espera de 4 segundos antes de realizar la solicitud
       },
       startCountdown() {
         const interval = setInterval(() => {
@@ -117,6 +130,20 @@
       },
       closeCalendar(event) {
         event.target.blur();
+      },
+      resetForm() {
+        this.startDate = '';
+        this.endDate = '';
+      },
+      formatDate(dateTime) {
+        const date = new Date(dateTime);
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        return date.toLocaleDateString('es-ES', options);
+      },
+      formatDateTime(dateTime) {
+        const date = new Date(dateTime);
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        return date.toLocaleString('es-ES', options);
       }
     }
   };
@@ -156,7 +183,7 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     width: 85px;
-    text-align: center; /* Asegura que el texto esté centrado */
+    text-align: center;
     font-size: 14px;
   }
   .button-container {
@@ -164,12 +191,12 @@
     align-items: center;
     justify-content: center;
     margin-top: 10px;
-    width: 300px; /* Ajusta el ancho según sea necesario */
-    position: relative; /* Añade posición relativa para el contador */
+    width: 300px;
+    position: relative;
   }
   button {
     padding: 10px 20px;
-    background-color: #ffcc00;
+    background-color: var(--primary-color);
     border: none;
     color: #000;
     font-weight: bold;
@@ -178,19 +205,33 @@
     transition: background-color 0.3s;
   }
   button:hover {
-    background-color: #ff9900;
+    background-color: var(--hover-color);
   }
   button.disabled-button {
-    background-color: #cccccc;
+    background-color: var(--disabled-color);
     cursor: not-allowed;
     opacity: 0.6;
   }
   .countdown {
-    position: absolute; /* Posiciona el contador de forma absoluta */
-    right: 32px; /* Ajusta la posición del contador */
+    position: absolute;
+    right: 5px; /* Ajusta esta posición según sea necesario */
     font-size: 1.2em;
-    color: #ff0000;
+    color: var(--error-color);
     font-weight: bold;
+  }
+  .spinner {
+    position: absolute;
+    right: -42px; /* Ajusta esta posición según sea necesario */
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: var(--primary-color);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
   #results {
     margin-top: 20px;
@@ -199,6 +240,9 @@
   @keyframes slideIn {
     from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+  }
+  .anomaly {
+    background-color: #fff3cd; /* Color amarillo claro */
   }
   .warning {
     text-align: center;

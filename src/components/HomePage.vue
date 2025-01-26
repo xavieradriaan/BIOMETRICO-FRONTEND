@@ -30,11 +30,13 @@ export default {
   text-align: center;
   margin-top: 50px;
   padding: 20px;
-  background-color: #fff;
+  background-color: #AFB2B7; /* Color del recuadro de bienvenida */
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   animation: fadeIn 1s ease-in-out;
+  color: #333; /* Mantener el color del texto oscuro para buen contraste */
 }
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
