@@ -70,13 +70,13 @@
         const startDate = new Date(this.startDate);
         if (isNaN(startDate.getTime())) return '';
         const maxEndDate = new Date(startDate);
-        maxEndDate.setDate(startDate.getDate() + 2); // Limitar a 3 días en total
+        maxEndDate.setDate(startDate.getDate() + 2); // Limitar a 2 días en total
         return maxEndDate.toISOString().split('T')[0];
       }
     },
     methods: {
       showPopup() {
-        alert('Sólo puede escogerse 3 días máximo de rango por consulta.');
+        alert('Sólo puede escogerse 2 días máximo de rango por consulta.');
       },
       delayedShowPopup() {
         setTimeout(this.showPopup, 300); // Retrasa la aparición del mensaje emergente

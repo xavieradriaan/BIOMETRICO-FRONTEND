@@ -3,8 +3,10 @@
       <label for="location">Seleccione el lugar:</label>
       <select id="location" v-model="selectedLocation">
         <option>Inbalnor-Milagro</option>
-        <option>Nicovita-Perú</option>
-        <option>Matriz-Durán</option>
+        <option>Taller-Durán</option>
+        <option>Skretting-Durán</option>
+        <option>Songa-Guayaquil</option>
+        <option>Agroficial-Guayaquil</option>
       </select>
       <button @click="selectLocation">Seleccionar</button>
     </div>
@@ -29,7 +31,7 @@
   .location-selector {
     margin-top: 20px;
     padding: 20px;
-    background-color: #8A8B8E; /* Color del recuadro de opciones de ubicación */
+    background-color: #8A8B8E; /* Color del recuadro que tiene la ubicación */
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     animation: slideIn 1s ease-in-out;
