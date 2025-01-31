@@ -44,7 +44,24 @@ button.disabled-button {
 }
 
 input[type="date"] {
-  width: 250px; /* Aumenta el ancho para asegurar que se vea todo el año */
+  width: 110px; /* Aumenta el ancho para asegurar que se vea todo el año */
   font-size: 14px; /* Ajusta el tamaño de la fuente si es necesario */
   padding: 5px; /* Ajusta el padding si es necesario */
+  color: #000; /* Asegura que el texto sea negro */
+  background-color: #fff; /* Asegura que el fondo sea blanco */
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  color: #000; /* Asegura que el texto sea negro */
+}
+
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #000; /* Asegura que el texto sea negro */
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none; /* Oculta los botones de spin y clear */
 }
