@@ -44,7 +44,7 @@ button.disabled-button {
 }
 
 input[type="date"] {
-  width: 110px; /* Aumenta el ancho para asegurar que se vea todo el año */
+  width: 90px; /* Aumenta el ancho para asegurar que se vea todo el año */
   font-size: 14px; /* Ajusta el tamaño de la fuente si es necesario */
   padding: 5px; /* Ajusta el padding si es necesario */
   color: #000; /* Asegura que el texto sea negro */
