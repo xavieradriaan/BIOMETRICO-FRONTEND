@@ -92,7 +92,7 @@ export default {
       maxEndDate.setDate(startDate.getDate() + 2); // Limitar a 3 días en total
 
       if (new Date(this.endDate) < minEndDate || new Date(this.endDate) > maxEndDate) {
-        if (confirm('La fecha de fin está fuera del rango permitido. Sólo puede escoger un rango máximo de 5 días. ¿Desea reiniciar la fecha de fin?')) {
+        if (confirm('La fecha de fin está fuera del rango permitido. Sólo puede escoger un rango máximo de 3 días. ¿Desea reiniciar la fecha de fin?')) {
           this.endDate = '';
         }
       }
