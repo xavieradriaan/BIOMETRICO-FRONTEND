@@ -37,7 +37,11 @@
           </tr>
         </tbody>
       </table>
-      <button @click="exportToExcel" class="export-button">Exportar a Excel</button>
+      <div class="export-buttons">
+        <button @click="exportToExcel" class="export-button export-excel">Exportar a Excel</button>
+        <button @click="exportToPDF" class="export-button export-pdf">Exportar a PDF</button>
+        <button @click="printPage" class="export-button export-print">Imprimir</button>
+      </div>
     </div>
     <p v-else>No hay registros disponibles.</p>
     <p class="warning">*Los empleados de amarillo son trabajadores que marcaron entrada, pero no salida. O viceversa*</p>
@@ -47,6 +51,8 @@
 <script>
 import { fetchAttendanceRecords } from './attendanceService';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default {
   data() {
@@ -154,6 +160,23 @@ export default {
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
       const fileName = 'Registros_de_Asistencia.xlsx';
       XLSX.writeFile(wb, fileName);
+    },
+    exportToPDF() {
+      const doc = new jsPDF();
+      doc.autoTable({
+        head: [['ID de Empleado', 'Nombre', 'Fecha', 'Primera Hora de Entrada', 'Última Hora de Salida']],
+        body: this.records.map(record => [
+          record['Employee ID'],
+          record['Name'],
+          this.formatDate(record['First Check-In Time']),
+          this.formatDateTime(record['First Check-In Time']),
+          this.formatDateTime(record['Last Check-Out Time'])
+        ])
+      });
+      doc.save('Registros_de_Asistencia.pdf');
+    },
+    printPage() {
+      window.print();
     }
   }
 };
@@ -223,7 +246,32 @@ button.disabled-button {
   opacity: 0.6;
 }
 button.export-button {
-  margin-top: 40px; /* Ajusta esta posición según sea necesario */
+  margin-top: 20px;
+  padding: 10px 20px;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+button.export-excel {
+  background-color: var(--excel-color);
+}
+button.export-excel:hover {
+  background-color: var(--hover-excel-color);
+}
+button.export-pdf {
+  background-color: var(--pdf-color);
+}
+button.export-pdf:hover {
+  background-color: var(--hover-pdf-color);
+}
+button.export-print {
+  background-color: var(--print-color);
+}
+button.export-print:hover {
+  background-color: var(--hover-print-color);
 }
 .countdown {
   position: absolute;
@@ -275,5 +323,11 @@ th, td {
 }
 th {
   background-color: #f2f2f2;
+}
+.export-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Espacio entre los botones */
+  margin-top: 20px;
 }
 </style>
