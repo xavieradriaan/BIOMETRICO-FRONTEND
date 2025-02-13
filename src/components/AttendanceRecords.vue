@@ -37,6 +37,7 @@
           </tr>
         </tbody>
       </table>
+      <button @click="exportToExcel" class="export-button">Exportar a Excel</button>
     </div>
     <p v-else>No hay registros disponibles.</p>
     <p class="warning">*Los empleados de amarillo son trabajadores que marcaron entrada, pero no salida. O viceversa*</p>
@@ -45,6 +46,7 @@
 
 <script>
 import { fetchAttendanceRecords } from './attendanceService';
+import * as XLSX from 'xlsx';
 
 export default {
   data() {
@@ -70,13 +72,13 @@ export default {
       const startDate = new Date(this.startDate);
       if (isNaN(startDate.getTime())) return '';
       const maxEndDate = new Date(startDate);
-      maxEndDate.setDate(startDate.getDate() + 2); // Limitar a 2 días en total
+      maxEndDate.setDate(startDate.getDate() + 2); // Limitar a 3 días en total
       return maxEndDate.toISOString().split('T')[0];
     }
   },
   methods: {
     showPopup() {
-      alert('Sólo puede escogerse 2 días máximo de rango por consulta.');
+      alert('Sólo puede escogerse 3 días máximo de rango por consulta.');
     },
     delayedShowPopup() {
       setTimeout(this.showPopup, 300); // Retrasa la aparición del mensaje emergente
@@ -144,6 +146,14 @@ export default {
       const date = new Date(dateTime);
       const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
       return date.toLocaleString('es-ES', options);
+    },
+    exportToExcel() {
+      const ws = XLSX.utils.json_to_sheet(this.records);
+      const wb = XLSX.utils.book_new();
+      const sheetName = 'Registros de Asistencia';
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      const fileName = 'Registros_de_Asistencia.xlsx';
+      XLSX.writeFile(wb, fileName);
     }
   }
 };
@@ -211,6 +221,9 @@ button.disabled-button {
   background-color: var(--disabled-color);
   cursor: not-allowed;
   opacity: 0.6;
+}
+button.export-button {
+  margin-top: 40px; /* Ajusta esta posición según sea necesario */
 }
 .countdown {
   position: absolute;
