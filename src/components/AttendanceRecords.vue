@@ -136,9 +136,6 @@ export default {
         }
       }, 1000);
     },
-    closeCalendar(event) {
-      event.target.blur();
-    },
     resetForm() {
       this.startDate = '';
       this.endDate = '';
